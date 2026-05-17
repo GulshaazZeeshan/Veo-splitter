@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    function isSignedIn() { 
+      return request.auth != null; 
+    }
+    
+    function isValidId(id) { 
+        return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); 
+    }
+    
+    function incoming() { 
+      return request.resource.data; 
+    }
+    
+    function existing() { 
+      return resource.data; 
+    }
+
+    function isValidScriptHistory(data) {
+      return data.keys().hasAll(['userId', 'scriptText', 'niche', 'wordCount', 'chunks', 'createdAt'])
+        && data.keys().size() == 6
+        && data.userId == request.auth.uid
+        && data.scriptText is string
+        && data.scriptText.size() <= 100000
+        && data.niche is string
+        && data.niche.size() <= 50
+        && data.wordCount is int
+        && data.wordCount >= 0
+        && data.chunks is list
+        && data.chunks.size() <= 500
+        && (data.chunks.size() == 0 || data.chunks[0] is string)
+        && data.createdAt == request.time;
+    }
+
+    function isValidFormulaStructure(data) {
+      return data.keys().hasAll(['userId', 'analysisText', 'avgWordCount', 'createdAt'])
+        && data.keys().size() == 4
+        && data.userId == request.auth.uid
+        && data.analysisText is string
+        && data.analysisText.size() <= 100000
+        && data.avgWordCount is int
+        && data.avgWordCount >= 0
+        && data.createdAt == request.time;
+    }
+
+    match /users/{userId}/scripts/{scriptId} {
+      allow create: if isSignedIn()
+                    && isValidId(userId)
+                    && isValidId(scriptId)
+                    && request.auth.uid == userId
+                    && isValidScriptHistory(incoming());
+
+      allow get, list: if isSignedIn()
+                        && isValidId(userId)
+                        && request.auth.uid == userId;
+
+      allow delete: if isSignedIn()
+                    && isValidId(userId)
+                    && isValidId(scriptId)
+                    && request.auth.uid == userId
+                    && existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/structures/{structureId} {
+      allow create: if isSignedIn()
+                    && isValidId(userId)
+                    && isValidId(structureId)
+                    && request.auth.uid == userId
+                    && isValidFormulaStructure(incoming());
+
+      allow get, list: if isSignedIn()
+                        && isValidId(userId)
+                        && request.auth.uid == userId;
+
+      allow delete: if isSignedIn()
+                    && isValidId(userId)
+                    && isValidId(structureId)
+                    && request.auth.uid == userId
+                    && existing().userId == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "ScriptHistory": {
+      "title": "Script History",
+      "description": "A saved generated script with its chunks.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "ID of the user who owns the script."
+        },
+        "scriptText": {
+          "type": "string",
+          "description": "The original script text."
+        },
+        "niche": {
+          "type": "string",
+          "description": "The selected niche."
+        },
+        "wordCount": {
+          "type": "integer",
+          "description": "The word count of the script."
+        },
+        "chunks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The generated chunks."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when created."
+        }
+      },
+      "required": ["userId", "scriptText", "niche", "wordCount", "chunks", "createdAt"]
+    },
+    "FormulaStructure": {
+      "title": "Formula Structure",
+      "description": "A saved competitive analysis and strategy formula.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "analysisText": { "type": "string" },
+        "avgWordCount": { "type": "integer" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "analysisText", "avgWordCount", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users/{userId}/scripts/{scriptId}": {
+      "schema": {
+        "$ref": "#/entities/ScriptHistory"
+      },
+      "description": "Stores user generated scripts history."
+    },
+    "users/{userId}/structures/{structureId}": {
+      "schema": {
+        "$ref": "#/entities/FormulaStructure"
+      },
+      "description": "Stores analyzed competitor strategies."
+    }
+  }
+}
